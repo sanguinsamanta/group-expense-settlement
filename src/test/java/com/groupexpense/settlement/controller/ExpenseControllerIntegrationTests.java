@@ -525,4 +525,81 @@ class ExpenseControllerIntegrationTests {
         assertEquals(initialExpenseCount, expenseRepository.count(),
                 "Expense record must be rolled back when share validation/saving fails.");
     }
+
+    @Test
+    @DisplayName("Should successfully record expense and verify database persistence and shares mapping")
+    void testRecordExpenseAndVerifyDatabasePersistence() throws Exception {
+        Long groupId = createGroup("Persistence Test Group");
+        Long m1 = addMember(groupId, "Kavya");
+        Long m2 = addMember(groupId, "Manish");
+
+        CreateExpenseRequest request = new CreateExpenseRequest(
+                "Team Lunch",
+                new BigDecimal("200.00"),
+                m1,
+                LocalDate.of(2026, 10, 26),
+                SplitMethod.EQUAL,
+                Arrays.asList(m1, m2),
+                null
+        );
+
+        MvcResult result = mockMvc.perform(post("/api/groups/{groupId}/expenses", groupId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", notNullValue()))
+                .andExpect(jsonPath("$.description", is("Team Lunch")))
+                .andExpect(jsonPath("$.totalAmount", is(200.00)))
+                .andExpect(jsonPath("$.payerName", is("Kavya")))
+                .andExpect(jsonPath("$.shares", hasSize(2)))
+                .andReturn();
+
+        Map<?, ?> responseMap = objectMapper.readValue(result.getResponse().getContentAsString(), Map.class);
+        Long expenseId = ((Number) responseMap.get("id")).longValue();
+
+        org.junit.jupiter.api.Assertions.assertTrue(expenseRepository.findById(expenseId).isPresent(),
+                "Expense should be persisted in database");
+        com.groupexpense.settlement.entity.Expense persisted = expenseRepository.findById(expenseId).get();
+        assertEquals("Team Lunch", persisted.getDescription());
+        assertEquals(new BigDecimal("200.00"), persisted.getTotalAmount());
+        assertEquals(m1, persisted.getPayer().getId());
+    }
+
+    @Test
+    @DisplayName("Should update group balances and settlement transfers after recording expense")
+    void testBalancesAndSettlementsAfterExpense() throws Exception {
+        Long groupId = createGroup("Settlement Flow Group");
+        Long m1 = addMember(groupId, "Payer1");
+        Long m2 = addMember(groupId, "Member2");
+
+        CreateExpenseRequest request = new CreateExpenseRequest(
+                "Dinner",
+                new BigDecimal("100.00"),
+                m1,
+                LocalDate.of(2026, 10, 26),
+                SplitMethod.EQUAL,
+                Arrays.asList(m1, m2),
+                null
+        );
+
+        mockMvc.perform(post("/api/groups/{groupId}/expenses", groupId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/groups/{groupId}/balances", groupId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].totalPaid", is(100.00)))
+                .andExpect(jsonPath("$[0].netBalance", is(50.00)))
+                .andExpect(jsonPath("$[1].totalPaid", is(0.00)))
+                .andExpect(jsonPath("$[1].netBalance", is(-50.00)));
+
+        mockMvc.perform(get("/api/groups/{groupId}/settlements", groupId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].fromMemberName", is("Member2")))
+                .andExpect(jsonPath("$[0].toMemberName", is("Payer1")))
+                .andExpect(jsonPath("$[0].amount", is(50.00)));
+    }
 }

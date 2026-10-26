@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Expense Settlement | Split & Settle Fairly</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22 width=%2232%22 height=%2232%22><text y=%2226%22 font-size=%2226%22>⚖️</text></svg>">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand" id="brand-home-btn" title="Back to Dashboard">
+        <div class="brand-icon">₹</div>
+        <div>
+          <span class="brand-title">SplitSettler</span>
+          <span class="brand-subtitle">Group Expense & Debt Settlement System</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="nav-record-expense-btn" class="btn btn-primary btn-sm">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          Record Expense
+        </button>
+
+        <button id="nav-new-group-btn" class="btn btn-secondary btn-sm">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+          New Group
+        </button>
+
+        <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Dark Mode" title="Toggle theme">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- App Main Content Area -->
+  <main class="app-main">
+
+    <!-- View: Dashboard (Groups List) -->
+    <section id="view-dashboard">
+      <div class="top-bar">
+        <div class="view-heading">
+          <h1>Expense Groups</h1>
+          <p>Organize shared expenses, track member debts, and compute simplified settlements.</p>
+        </div>
+        <div>
+          <button id="create-group-btn" class="btn btn-primary">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+            Create New Group
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue">📁</div>
+          <div class="stat-data">
+            <div class="stat-label">Total Groups</div>
+            <div class="stat-value" id="stat-total-groups">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">👥</div>
+          <div class="stat-data">
+            <div class="stat-label">Total Members</div>
+            <div class="stat-value" id="stat-total-members">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">💳</div>
+          <div class="stat-data">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" id="stat-total-expenses">0</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon amber">⚡</div>
+          <div class="stat-data">
+            <div class="stat-label">Backend Status</div>
+            <div class="stat-value" id="stat-system-status" style="font-size: 1.1rem; color: var(--success);">Online</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Groups List Grid -->
+      <div id="groups-container" class="group-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- View: Group Detail -->
+    <section id="view-group-detail" style="display: none;">
+      <!-- Breadcrumb / Back button -->
+      <div style="margin-bottom: 1rem;">
+        <button id="back-to-dashboard-btn" class="btn btn-outline btn-sm">
+          ← Back to All Groups
+        </button>
+      </div>
+
+      <!-- Group Hero Card -->
+      <div class="group-header-card">
+        <div class="group-info">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <h2 id="detail-group-name">Group Name</h2>
+            <span id="detail-group-badge" class="badge badge-primary">ID: #</span>
+          </div>
+          <p id="detail-group-desc">Group created on --</p>
+          <div class="group-members-chips" id="detail-group-members-chips">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button id="btn-open-add-member" class="btn btn-secondary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            Add Member
+          </button>
+          <button id="btn-open-record-expense" class="btn btn-primary">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            Record Expense
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="tabs-nav">
+        <button class="tab-btn active" data-tab="tab-expenses">
+          💳 Expenses (<span id="count-tab-expenses">0</span>)
+        </button>
+        <button class="tab-btn" data-tab="tab-balances">
+          ⚖️ Net Balances
+        </button>
+        <button class="tab-btn" data-tab="tab-settlements">
+          🤝 Settlement Transfers (<span id="count-tab-settlements">0</span>)
+        </button>
+        <button class="tab-btn" data-tab="tab-members">
+          👥 Members (<span id="count-tab-members">0</span>)
+        </button>
+      </nav>
+
+      <!-- Tab 1: Expenses -->
+      <div id="tab-expenses" class="tab-panel active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 700;">Expense History</h3>
+          <span class="badge badge-subtle" id="total-spent-badge">Total Group Spend: ₹0.00</span>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Paid By</th>
+                <th>Split Method</th>
+                <th>Amount</th>
+                <th style="text-align: right;">Shares</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-table-body">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Net Balances -->
+      <div id="tab-balances" class="tab-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700;">Net Balance per Member</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem;">
+              Calculated as: <code>Total Paid - Total Assigned Share</code>. Positive values are to be received; negative values are owed.
+            </p>
+          </div>
+          <div class="badge badge-success" id="zero-sum-badge">
+            ✓ Zero-Sum Invariant: Net Total = ₹0.00
+          </div>
+        </div>
+
+        <div class="balances-grid" id="balances-grid-container">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Tab 3: Suggested Settlements -->
+      <div id="tab-settlements" class="tab-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <h3 style="font-size: 1.25rem; font-weight: 700;">Suggested Settlement Transfers</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.15rem;">
+              Generated by greedy debtor-creditor matching with zero remaining balances.
+            </p>
+          </div>
+          <button id="copy-settlements-btn" class="btn btn-outline btn-sm">
+            📋 Copy Transfer Plan
+          </button>
+        </div>
+
+        <div class="settlements-list" id="settlements-container">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Viva & Algorithm Details Card -->
+        <div class="viva-box">
+          <h3>💡 Greedy Settlement Algorithm Architecture</h3>
+          <p>
+            The backend implements a deterministic <strong>Greedy Matching Algorithm</strong> to minimize debt transfers:
+          </p>
+          <ul style="padding-left: 1.25rem; font-size: 0.9rem; color: var(--text-muted); line-height: 1.6;">
+            <li><strong>Step 1</strong>: Compute each member's net balance: <code>netBalance = totalPaid - assignedShare</code>.</li>
+            <li><strong>Step 2</strong>: Separate debtors (negative balance) and creditors (positive balance).</li>
+            <li><strong>Step 3</strong>: Sort debtors and creditors descending by amounts in $O(N \log N)$.</li>
+            <li><strong>Step 4</strong>: Match the largest debtor with the largest creditor, transferring $\min(\text{debtorAmount}, \text{creditorAmount})$.</li>
+            <li><strong>Step 5</strong>: Repeat until all balances reach <strong>₹0.00</strong>.</li>
+            <li><em>Note:</em> While minimizing cash transactions globally is NP-complete (reducible from the Subset Sum Problem), this greedy approach guarantees full settlement with zero cash drift in $O(N \log N)$.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Tab 4: Members -->
+      <div id="tab-members" class="tab-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+          <h3 style="font-size: 1.25rem; font-weight: 700;">Group Members</h3>
+          <button id="btn-members-tab-add" class="btn btn-primary btn-sm">
+            + Add New Member
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Member ID</th>
+                <th>Member Name</th>
+                <th>Joined Date</th>
+              </tr>
+            </thead>
+            <tbody id="members-table-body">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: Create Group -->
+  <div class="modal-backdrop" id="modal-create-group">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create Expense Group</h3>
+        <button class="modal-close-btn" data-close-modal="modal-create-group">&times;</button>
+      </div>
+      <form id="form-create-group">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="group-name-input">Group Name *</label>
+            <input type="text" id="group-name-input" class="form-control" placeholder="e.g. Goa Trip, Flat 402, Hackathon Team" required maxlength="100">
+            <div class="form-hint">Max 100 characters.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-create-group">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Group</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Member -->
+  <div class="modal-backdrop" id="modal-add-member">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Member to Group</h3>
+        <button class="modal-close-btn" data-close-modal="modal-add-member">&times;</button>
+      </div>
+      <form id="form-add-member">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="member-name-input">Member Name *</label>
+            <input type="text" id="member-name-input" class="form-control" placeholder="e.g. Alice, Bob, Charlie" required maxlength="100">
+            <div class="form-hint">Enter the person's name. Existing members with this name will be linked automatically.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-add-member">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Record Expense -->
+  <div class="modal-backdrop" id="modal-record-expense">
+    <div class="modal-card" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3>Record New Expense</h3>
+        <button class="modal-close-btn" data-close-modal="modal-record-expense">&times;</button>
+      </div>
+      <form id="form-record-expense">
+        <div class="modal-body">
+          <div class="form-group" id="group-select-container">
+            <label for="expense-group-select">Expense Group *</label>
+            <select id="expense-group-select" class="form-control" required>
+              <option value="">Select group...</option>
+            </select>
+            <div class="form-hint" id="expense-group-hint">Select the group to record this expense for.</div>
+          </div>
+
+          <div id="no-members-warning" style="display: none; background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: var(--radius-md); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem; color: var(--text-main);">
+            ⚠️ This group has no registered members yet.
+            <div style="margin-top: 0.5rem;">
+              <button type="button" id="btn-quick-add-member" class="btn btn-secondary btn-sm">+ Add Member Now</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-desc-input">Expense Description *</label>
+            <input type="text" id="expense-desc-input" class="form-control" placeholder="e.g. Dinner, Villa Rental, Cab fare" required maxlength="255">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="expense-amount-input">Total Amount (₹) *</label>
+              <input type="number" id="expense-amount-input" class="form-control" placeholder="0.00" step="0.01" min="0.01" required>
+            </div>
+            <div class="form-group">
+              <label for="expense-date-input">Date *</label>
+              <input type="date" id="expense-date-input" class="form-control" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-payer-select">Who Paid? *</label>
+            <select id="expense-payer-select" class="form-control" required>
+              <option value="">Select payer...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Split Method *</label>
+            <div class="radio-toggle-group">
+              <label>
+                <input type="radio" name="splitMethod" value="EQUAL" checked id="split-method-equal">
+                <span>Equal Split</span>
+              </label>
+              <label>
+                <input type="radio" name="splitMethod" value="CUSTOM" id="split-method-custom">
+                <span>Custom Split</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Dynamic Shares Container -->
+          <div class="form-group">
+            <label id="shares-section-label">Select Members to Split Equally:</label>
+            <div id="shares-list-container" class="shares-box">
+              <!-- Dynamically populated checkboxes / inputs -->
+            </div>
+
+            <!-- Live Split Feedback Tracker -->
+            <div id="split-tracker" class="split-tracker matched">
+              <span id="tracker-msg">Select members to split.</span>
+              <span id="tracker-summary" style="font-weight: 700; font-family: monospace;">₹0.00 / ₹0.00</span>
+            </div>
+
+            <!-- Save action appears below the split once it is valid -->
+            <div id="save-record-action" class="save-record-action">
+              <button type="submit" id="btn-save-expense-record" class="btn btn-primary">
+                Save Expense Record
+              </button>
+              <p class="save-record-hint">The expense and its member shares will be saved to the database.</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-record-expense">Cancel</button>
+          <button type="submit" id="btn-submit-expense" class="btn btn-primary">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: View Expense Shares Breakdown -->
+  <div class="modal-backdrop" id="modal-view-shares">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-view-shares-title">Expense Share Breakdown</h3>
+        <button class="modal-close-btn" data-close-modal="modal-view-shares">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th style="text-align: right;">Assigned Share</th>
+              </tr>
+            </thead>
+            <tbody id="shares-detail-body">
+              <!-- Dynamic -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-view-shares">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Application Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
